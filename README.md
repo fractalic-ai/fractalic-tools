@@ -2,13 +2,14 @@
 
 A comprehensive collection of automation tools for the Fractalic AI workflow platform. All tools follow the Simple Autodiscovery JSON Schema Logic for seamless integration.
 
-## Tool Categories
+## Tool Packs
 
-### 🔧 Core (2 tools)
-Essential Fractalic workflow components
+### 🤖 Fractalic (3 tools)
+Core Fractalic workflow platform tools and utilities
 
-- **[Fractalic Operation Generator](./core/fractalic-opgen/fractalic_opgen.py)** - Generate Fractalic operation blocks (YAML) from JSON input
-- **[Workflow Utilities](./core/workflow-utilities/anchor_window_patch.py)** - Window anchoring and workflow helper utilities
+- **[Fractalic Operation Generator](./fractalic/fractalic_opgen.py)** - Generate Fractalic operation blocks (YAML) from JSON input
+- **[Exit Plan Mode](./fractalic/exitplanmode.py)** - Plan mode management and workflow control
+- **[UI Server](./fractalic/ui_server.py)** - UI server implementation for Fractalic interface
 
 ### 🏢 CRM (47 tools)
 Complete HubSpot CRM automation suite with process mining capabilities
@@ -63,33 +64,26 @@ Complete HubSpot CRM automation suite with process mining capabilities
 - **[Hub Helpers (Discovery)](./crm/hubspot-suite/discovery/tools/hubspot_hub_helpers.py)** - Discovery utilities
 
 ### 💬 Communication (1 tool)
-Communication platform integrations
+Communication platform integrations and messaging automation
 
 - **[Telegram Automation](./communication/telegram/telegram_automation_simple.py)** - Complete Telegram automation with TDLib (get_chats, send_message, get_messages, etc.)
 
-### 🛠️ Development (12 tools)
-Software development and DevOps tools
+### 💻 OS (10 tools)
+Operating system operations, file management, and shell utilities
 
-#### File Operations (5 tools)
-- **[Read](./development/file-ops/read.py)** - File reading with image support and line numbers
-- **[Write](./development/file-ops/write.py)** - File writing operations
-- **[Edit](./development/file-ops/edit.py)** - File editing operations
-- **[Multi Edit](./development/file-ops/multiedit.py)** - Multiple file editing
-- **[Glob](./development/file-ops/glob.py)** - File pattern matching
-
-#### Shell Operations (2 tools)
-- **[Bash](./development/shell/bash.py)** - Shell command execution
-- **[Shell Tool](./development/shell/shell_tool.py)** - Shell utilities wrapper
-
-#### Search & Navigation (2 tools)
-- **[Grep](./development/search/grep.py)** - Text search functionality
-- **[Directory List](./development/search/ls.py)** - Directory listing
-
-#### Workflow (1 tool)
-- **[Exit Plan Mode](./development/workflow/exitplanmode.py)** - Plan mode management
+- **[Read](./os/read.py)** - File reading with image support and line numbers
+- **[Write](./os/write.py)** - File writing operations
+- **[Edit](./os/edit.py)** - File editing operations
+- **[Multi Edit](./os/multiedit.py)** - Multiple file editing
+- **[Glob](./os/glob.py)** - File pattern matching
+- **[Bash](./os/bash.py)** - Shell command execution
+- **[Shell Tool](./os/shell_tool.py)** - Shell utilities wrapper
+- **[Grep](./os/grep.py)** - Text search functionality
+- **[Directory List](./os/ls.py)** - Directory listing
+- **[Anchor Window Patch](./os/anchor_window_patch.py)** - Window anchoring and system utilities
 
 ### 🌐 Web (3 tools)
-Web scraping and internet services
+Web scraping, content extraction, and internet services
 
 #### Scraping (2 tools)
 - **[Web Fetch](./web/scraping/webfetch.py)** - Web content fetching
@@ -98,15 +92,10 @@ Web scraping and internet services
 #### Search (1 tool)
 - **[Tavily Search](./web/search/tavily_search.py)** - Tavily search API integration
 
-### ✅ Productivity (1 tool)
-Productivity and task management
+### 📋 Project Management (1 tool)
+Project management, task tracking, and productivity tools
 
-- **[Todo Write](./productivity/tasks/todowrite.py)** - Task management and todo list operations
-
-### ⚙️ System (1 tool)
-System administration and infrastructure
-
-- **[UI Server](./system/ui/ui_server.py)** - UI server implementation
+- **[Todo Write](./project-management/todowrite.py)** - Task management and todo list operations
 
 ## Usage
 
@@ -126,24 +115,56 @@ python <tool_path> '{"param1": "value1", "param2": "value2"}'
 ## Tool Statistics
 
 - **Total Tools**: 61
-- **Categories**: 6
+- **Tool Packs**: 6
 - **Autodiscovery Compliant**: 100%
 - **Language**: Python
 - **Integration**: Fractalic AI workflow platform
 
 ## Dependencies
 
-### HubSpot Tools
+### HubSpot Tools (CRM Pack)
 - Set environment variable: `export HUBSPOT_TOKEN="your_token"`
 - All HubSpot tools share authentication and utilities
 
-### Telegram Tools
+### Telegram Tools (Communication Pack)
 - Run interactive setup: `python communication/telegram/telegram_automation_simple.py --init`
 - Dependencies: `pip install -r communication/telegram/telegram_requirements.txt`
 
-### Development Tools
+### OS Pack
 - No external dependencies for most tools
 - Self-contained Python implementations
+
+### Fractalic Pack
+- Core Fractalic platform tools
+- No external dependencies
+
+### Web Pack
+- No external dependencies for basic tools
+- API keys may be required for search services
+
+### Project Management Pack
+- No external dependencies
+- Self-contained task management
+
+## Pack Descriptions
+
+### 🤖 Fractalic Pack
+Essential tools for the Fractalic workflow platform including operation generation, UI management, and workflow control. These tools provide core functionality for building and managing AI workflows.
+
+### 🏢 CRM Pack
+Comprehensive HubSpot integration suite with 47 tools covering contact management, deal processing, ticket handling, and advanced process mining capabilities. Includes intelligent discovery, automation, and analytics tools.
+
+### 💬 Communication Pack
+Communication platform integrations starting with comprehensive Telegram automation. Enables chat management, message automation, and communication workflow integration.
+
+### 💻 OS Pack
+Operating system utilities covering file operations, shell execution, text processing, and system management. Provides fundamental OS-level capabilities for workflow automation.
+
+### 🌐 Web Pack
+Web interaction tools including content scraping, data extraction, and search services. Enables workflows to interact with web services and extract information from online sources.
+
+### 📋 Project Management Pack
+Project and task management tools for organizing workflows, tracking progress, and managing productivity. Includes todo management and project coordination utilities.
 
 ## Contributing
 
@@ -156,4 +177,4 @@ Tools must implement:
 
 ---
 
-*This repository serves as a tool marketplace for the Fractalic AI workflow platform, providing comprehensive business automation capabilities through standardized, autodiscoverable tools.*
+*This repository serves as a tool marketplace for the Fractalic AI workflow platform, providing comprehensive business automation capabilities through standardized, autodiscoverable tools organized into functional packs.*
