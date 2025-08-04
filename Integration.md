@@ -2,286 +2,159 @@
 
 ## Overview
 
-This document describes how Fractalic frontend can deterministically parse the README.md to extract tool information for marketplace integration and one-click installation from the remote GitHub repository.
+This document describes the data model and parsing logic for the README.md file to enable deterministic extraction of tool information for marketplace integration and one-click installation from the remote GitHub repository.
 
-## Parsing Logic
+## README.md Data Model
 
-### README.md Structure
+### Structure Hierarchy
 
-The README.md follows a strict hierarchical structure that enables reliable parsing:
+The README.md follows a strict hierarchical structure:
 
 ```
 # Fractalic Tools Marketplace
 ## Tool Categories
 ### 🔧 Category Name (N tools)
+#### Subcategory Name (N tools)
 - **[Tool Name](./path/to/tool.py)** - Description
 ```
 
-### Parsing Algorithm
+### Data Elements
 
-1. **Category Detection**: Lines starting with `### ` followed by emoji, category name, and tool count in parentheses
-2. **Tool Detection**: Lines starting with `- **[` containing tool name, path, and description
-3. **Path Extraction**: Tool paths are in format `(./relative/path/to/tool.py)`
+#### Category Header
+- **Pattern**: `### {emoji} {category_name} ({count} tool{s})`  
+- **Purpose**: Defines tool categories with visual icons and counts
+- **Example**: `### 🔧 Core (2 tools)`
+
+#### Subcategory Header (Optional)
+- **Pattern**: `#### {subcategory_name} ({count} tool{s})`
+- **Purpose**: Groups related tools within categories
+- **Example**: `#### File Operations (5 tools)`
+
+#### Tool Entry
+- **Pattern**: `- **[{tool_name}](./{relative_path}){suffix}** - {description}`
+- **Components**:
+  - `tool_name`: Display name for the tool
+  - `relative_path`: Path from repository root (starts with `./`)
+  - `description`: Brief functional description
+- **Example**: `- **[Read](./development/file-ops/read.py)** - File reading with image support`
+
+## Parsing Logic
 
 ### Regular Expressions
 
-```javascript
-// Category pattern
-const categoryPattern = /^### (.+) \((\d+) tools?\)$/;
-
-// Tool pattern  
-const toolPattern = /^- \*\*\[(.+?)\]\((.+?)\)\*\* - (.+)$/;
+#### Category Detection
+```regex
+^### (.+?) \((\d+) tools?\)$
 ```
+**Captures**: `[full_title, count]`
+**Title Format**: `{emoji} {category_name}`
 
-## Data Structure
+#### Subcategory Detection  
+```regex
+^#### (.+?) \((\d+) tools?\)$
+```
+**Captures**: `[subcategory_name, count]`
 
-### Tool Object
+#### Tool Detection
+```regex
+^- \*\*\[(.+?)\]\((.+?)\)\*\* - (.+)$
+```
+**Captures**: `[tool_name, path, description]`
+
+### Parsing Algorithm
+
+1. **Line-by-line processing** of README.md content
+2. **State tracking** for current category and subcategory context
+3. **Pattern matching** using regular expressions for each line type
+4. **Path normalization** from relative (`./path`) to absolute GitHub URLs
+5. **Hierarchical grouping** of tools under categories and subcategories
+
+### Data Structure Model
+
+#### Tool Object
 ```json
 {
-  "name": "Tool Name",
-  "path": "./category/subcategory/tool.py",
-  "description": "Tool description",
-  "category": "Category Name",
-  "categoryIcon": "🔧",
-  "fullGitHubPath": "https://raw.githubusercontent.com/USER/REPO/main/category/subcategory/tool.py"
+  "name": "string",
+  "path": "string (relative, starts with ./)",
+  "description": "string", 
+  "category": "string",
+  "subcategory": "string (optional)",
+  "githubUrl": "string (constructed)"
 }
 ```
 
-### Category Object
+#### Category Object
 ```json
 {
-  "name": "Category Name", 
-  "icon": "🔧",
-  "toolCount": 5,
-  "tools": [/* Tool objects */]
+  "name": "string",
+  "icon": "string (emoji)",
+  "toolCount": "number",
+  "subcategories": "CategoryObject[] (optional)",
+  "tools": "ToolObject[]"
 }
 ```
 
-## Complete Tool List
-
-Based on current README.md structure, here are all 61 tools with their exact paths:
-
-### Core (2 tools)
-- `./core/fractalic-opgen/fractalic_opgen.py`
-- `./core/workflow-utilities/anchor_window_patch.py`
-
-### CRM (47 tools)
-#### Management (16 tools)
-- `./crm/hubspot-suite/manage/hubspot_contact_get_or_create.py`
-- `./crm/hubspot-suite/manage/hubspot_contact_update.py`
-- `./crm/hubspot-suite/manage/hubspot_deal_create_standalone.py`
-- `./crm/hubspot-suite/manage/hubspot_deal_search.py`
-- `./crm/hubspot-suite/manage/hubspot_deal_update.py`
-- `./crm/hubspot-suite/manage/hubspot_deal_update_stage.py`
-- `./crm/hubspot-suite/manage/hubspot_ticket_create_smart.py`
-- `./crm/hubspot-suite/manage/hubspot_ticket_update.py`
-- `./crm/hubspot-suite/manage/hubspot_task_create_advanced.py`
-- `./crm/hubspot-suite/manage/hubspot_email_send.py`
-- `./crm/hubspot-suite/manage/hubspot_associate.py`
-- `./crm/hubspot-suite/manage/hubspot_bulk_update.py`
-- `./crm/hubspot-suite/manage/hubspot_intelligent_batch.py`
-- `./crm/hubspot-suite/manage/hubspot_owner_round_robin.py`
-- `./crm/hubspot-suite/manage/hubspot_schema_cache.py`
-- `./crm/hubspot-suite/manage/hubspot_smart_validator.py`
-
-#### Discovery & Process Mining (19 tools)  
-- `./crm/hubspot-suite/discovery/tools/hubspot_properties_discover.py`
-- `./crm/hubspot-suite/discovery/tools/hubspot_pipelines_discover.py`
-- `./crm/hubspot-suite/discovery/tools/hubspot_universal_enumerator.py`
-- `./crm/hubspot-suite/discovery/tools/process_mining_analysis.py`
-- `./crm/hubspot-suite/discovery/tools/run_full_process_mining.py`
-- `./crm/hubspot-suite/discovery/tools/hubspot_activity_pattern_miner.py`
-- `./crm/hubspot-suite/discovery/tools/hubspot_bottleneck_identifier.py`
-- `./crm/hubspot-suite/discovery/tools/hubspot_customer_journey_mapper.py`
-- `./crm/hubspot-suite/discovery/tools/hubspot_deal_timeline_extractor.py`
-- `./crm/hubspot-suite/discovery/tools/hubspot_process_flow_analyzer.py`
-- `./crm/hubspot-suite/discovery/tools/hubspot_account_discovery.py`
-- `./crm/hubspot-suite/discovery/tools/hubspot_automation_recommender.py`
-- `./crm/hubspot-suite/discovery/tools/hubspot_connection_tracer.py`
-- `./crm/hubspot-suite/discovery/tools/hubspot_data_relationship_mapper.py`
-- `./crm/hubspot-suite/discovery/tools/hubspot_detailed_process_extractor.py`
-- `./crm/hubspot-suite/discovery/tools/hubspot_graph_process_miner.py`
-- `./crm/hubspot-suite/discovery/tools/hubspot_graph_visualizer.py`
-- `./crm/hubspot-suite/discovery/tools/hubspot_integration_gap_finder.py`
-- `./crm/hubspot-suite/discovery/tools/hubspot_object_association_analyzer.py`
-
-#### Additional Tools (12 tools)
-- `./crm/hubspot-suite/discovery/tools/hubspot_object_audit_trail.py`
-- `./crm/hubspot-suite/discovery/tools/hubspot_organization_analyzer.py`
-- `./crm/hubspot-suite/discovery/tools/hubspot_process_sequence_detector.py`
-- `./crm/hubspot-suite/discovery/tools/hubspot_property_usage_analyzer.py`
-- `./crm/hubspot-suite/discovery/tools/hubspot_workflow_optimizer.py`
-- `./crm/hubspot-suite/hubspot_hub_helpers.py`
-- `./crm/hubspot-suite/manage/hubspot_hub_helpers.py`
-- `./crm/hubspot-suite/discovery/tools/hubspot_hub_helpers.py`
-
-### Communication (1 tool)
-- `./communication/telegram/telegram_automation_simple.py`
-
-### Development (12 tools)
-#### File Operations (5 tools)
-- `./development/file-ops/read.py`
-- `./development/file-ops/write.py`
-- `./development/file-ops/edit.py`
-- `./development/file-ops/multiedit.py`
-- `./development/file-ops/glob.py`
-
-#### Shell Operations (2 tools)
-- `./development/shell/bash.py`
-- `./development/shell/shell_tool.py`
-
-#### Search & Navigation (2 tools)
-- `./development/search/grep.py`
-- `./development/search/ls.py`
-
-#### Workflow (1 tool)
-- `./development/workflow/exitplanmode.py`
-
-### Web (3 tools)
-#### Scraping (2 tools)
-- `./web/scraping/webfetch.py`
-- `./web/scraping/get_web_markdown.py`
-
-#### Search (1 tool)
-- `./web/search/tavily_search.py`
-
-### Productivity (1 tool)
-- `./productivity/tasks/todowrite.py`
-
-### System (1 tool)
-- `./system/ui/ui_server.py`
-
-## Implementation Example
-
-### JavaScript Parser
-```javascript
-async function parseToolsFromReadme(repoUrl) {
-  const readmeUrl = `${repoUrl}/raw/main/README.md`;
-  const response = await fetch(readmeUrl);
-  const content = await response.text();
-  
-  const lines = content.split('\n');
-  const categories = [];
-  let currentCategory = null;
-  
-  for (const line of lines) {
-    // Match category header
-    const categoryMatch = line.match(/^### (.+) \((\d+) tools?\)$/);
-    if (categoryMatch) {
-      const [, fullName, count] = categoryMatch;
-      const iconMatch = fullName.match(/^(.+?) (.+)$/);
-      
-      currentCategory = {
-        name: iconMatch ? iconMatch[2] : fullName,
-        icon: iconMatch ? iconMatch[1] : '',
-        toolCount: parseInt(count),
-        tools: []
-      };
-      categories.push(currentCategory);
-      continue;
-    }
-    
-    // Match tool entry
-    const toolMatch = line.match(/^- \*\*\[(.+?)\]\((.+?)\)\*\* - (.+)$/);
-    if (toolMatch && currentCategory) {
-      const [, name, path, description] = toolMatch;
-      
-      currentCategory.tools.push({
-        name,
-        path,
-        description,
-        category: currentCategory.name,
-        categoryIcon: currentCategory.icon,
-        fullGitHubPath: `${repoUrl}/raw/main/${path.substring(2)}` // Remove ./
-      });
-    }
-  }
-  
-  return categories;
+#### Root Structure
+```json
+{
+  "totalTools": "number",
+  "categories": "CategoryObject[]"
 }
 ```
 
-### Python Parser
-```python
-import re
-import requests
+## URL Construction
 
-def parse_tools_from_readme(repo_url):
-    readme_url = f"{repo_url}/raw/main/README.md"
-    response = requests.get(readme_url)
-    content = response.text
-    
-    lines = content.split('\n')
-    categories = []
-    current_category = None
-    
-    category_pattern = re.compile(r'^### (.+) \((\d+) tools?\)$')
-    tool_pattern = re.compile(r'^- \*\*\[(.+?)\]\((.+?)\)\*\* - (.+)$')
-    
-    for line in lines:
-        # Match category
-        category_match = category_pattern.match(line)
-        if category_match:
-            full_name, count = category_match.groups()
-            icon_match = re.match(r'^(.+?) (.+)$', full_name)
-            
-            current_category = {
-                'name': icon_match.group(2) if icon_match else full_name,
-                'icon': icon_match.group(1) if icon_match else '',
-                'toolCount': int(count),
-                'tools': []
-            }
-            categories.append(current_category)
-            continue
-            
-        # Match tool
-        tool_match = tool_pattern.match(line)
-        if tool_match and current_category:
-            name, path, description = tool_match.groups()
-            
-            current_category['tools'].append({
-                'name': name,
-                'path': path,
-                'description': description,
-                'category': current_category['name'],
-                'categoryIcon': current_category['icon'],
-                'fullGitHubPath': f"{repo_url}/raw/main/{path[2:]}"  # Remove ./
-            })
-    
-    return categories
+### GitHub Raw URL Pattern
+```
+https://raw.githubusercontent.com/{owner}/{repo}/main/{path_without_dot_slash}
 ```
 
-## One-Click Installation
+### Path Transformation
+- **Input**: `./category/subcategory/tool.py`
+- **Output**: `https://raw.githubusercontent.com/{owner}/{repo}/main/category/subcategory/tool.py`
+
+## Validation Rules
+
+### Structure Validation
+1. **Tool count accuracy**: Category headers must match actual tool entries
+2. **Path validity**: All relative paths must start with `./` and end with `.py`
+3. **Hierarchy consistency**: Tools must appear under appropriate category/subcategory headers
+4. **Unique paths**: No duplicate tool paths within the repository
+
+### Content Validation
+1. **Required sections**: Must contain "## Tool Categories" section
+2. **Tool statistics**: Must contain "## Tool Statistics" with total count
+3. **Format compliance**: All tool entries must follow the exact markdown format
+4. **Description presence**: Every tool must have a non-empty description
+
+## Integration Requirements
+
+### Frontend Responsibilities
+1. **README.md fetching** from GitHub repository
+2. **Content parsing** using the defined regular expressions
+3. **URL construction** for individual tool installation
+4. **Validation** against the defined rules
+5. **Error handling** for malformed entries
 
 ### Installation Process
-1. **Tool Selection**: User selects tool from marketplace UI
-2. **Path Resolution**: Convert relative path to full GitHub raw URL
-3. **Download**: Fetch tool content from GitHub
-4. **Local Installation**: Save to user's local tools directory
-5. **Dependency Check**: Check for additional files (requirements.txt, etc.)
-6. **Verification**: Run autodiscovery test to confirm installation
+1. **Tool selection** from parsed marketplace data
+2. **URL resolution** to GitHub raw content
+3. **Content download** and local installation
+4. **Dependency resolution** (requirements.txt, shared utilities)
+5. **Autodiscovery verification** via test execution
 
-### Dependencies Handling
-- **HubSpot tools**: Require `HUBSPOT_TOKEN` environment variable
-- **Telegram tools**: Include `telegram_requirements.txt` in same directory
-- **Core tools**: No external dependencies
+## Error Handling
 
-### Installation URLs
-Base repository: `https://github.com/USER/REPO`
+### Parsing Errors
+- **Malformed headers**: Skip and log invalid category/subcategory entries
+- **Invalid tool entries**: Skip tools that don't match the required pattern
+- **Count mismatches**: Log warnings but continue processing
+- **Missing descriptions**: Treat as validation warnings
 
-Tool URLs follow pattern:  
-`https://raw.githubusercontent.com/USER/REPO/main/{path_without_dot_slash}`
+### Integration Errors
+- **Network failures**: Retry with exponential backoff
+- **Invalid URLs**: Skip tools with malformed paths
+- **Installation failures**: Provide user feedback and rollback options
+- **Validation failures**: Report tools that fail autodiscovery tests
 
-Example:  
-`./core/fractalic-opgen/fractalic_opgen.py` →  
-`https://raw.githubusercontent.com/USER/REPO/main/core/fractalic-opgen/fractalic_opgen.py`
-
-## Validation
-
-The parsing logic can be validated by ensuring:
-1. Total tool count matches: **61 tools**
-2. Category counts match README headers
-3. All paths are valid and point to existing Python files
-4. All tools pass autodiscovery test: `python tool.py '{"__test__": true}'`
-
-This deterministic structure enables reliable marketplace integration with one-click tool installation from the remote repository.
+This data model ensures reliable, deterministic parsing of the README.md for marketplace integration while maintaining flexibility for future tool additions and category expansions.
